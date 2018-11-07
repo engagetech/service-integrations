@@ -1,0 +1,9 @@
+---
+steps:
+  - name: ":docker: Docker"
+    command: .buildkite/scripts/docker.sh
+    env:
+      SERVICE: "integrations"
+      SERVICE_BUILD: "${BUILDKITE_BRANCH?}"
+    agents:
+      queue: packer-v3

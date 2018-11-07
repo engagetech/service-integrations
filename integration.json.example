@@ -1,0 +1,88 @@
+{
+	"id": {
+		"N": "0"
+	},
+	"name": {
+		"S": "Premier"
+	},
+	"engageExternalApi": {
+		"S": "http://localhost:3000"
+	},
+	"engageApiKey": {
+		"S": ""
+	},
+	"webhookToken": {
+		"S": ""
+	},
+	"bullhorn": {
+		"M": {
+			"apiUrl": {
+				"S": ""
+			},
+			"clientId": {
+				"S": ""
+			},
+			"clientSecret": {
+				"S": ""
+			},
+			"username": {
+				"S": ""
+			},
+			"password": {
+				"S": ""
+			},
+			"cronSchedule": {
+				"S": "*/30 * * * * *"
+			},
+			"workerPrefix": {
+				"S": "BH-"
+			},
+			"candidateFields": {
+				"SS": [
+					"id",
+					"firstName",
+					"lastName",
+					"email",
+					"status",
+					"mobile",
+					"address"
+				]
+			},
+			"mappings": {
+				"M": {
+					"candidateToWorker": {
+						"M": {
+							"id": {
+								"S": "EmployeeId"
+							},
+							"firstName": {
+								"S": "FirstName"
+							},
+							"lastName": {
+								"S": "Surname"
+							},
+							"email": {
+								"S": "Email"
+							},
+							"mobile": {
+								"S": "Mobile"
+							},
+							"address.address1": {
+								"S": "Address1"
+							},
+							"address.address2": {
+								"S": "Address2"
+							},
+							"address.city": {
+								"S": "Address3"
+							},
+							"address.zip": {
+								"S": "AddressPostCode"
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

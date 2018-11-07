@@ -1,0 +1,32 @@
+/******************************************************************************************
+
+We configure... because we can
+
+******************************************************************************************/
+
+module.exports = {
+	// Substituted vars at buildtime
+	gitBranch: "{{git-branch}}",
+	gitCommit: "{{git-commit}}",
+
+	// The IP address this service will bind to
+	ip: "0.0.0.0",
+
+	// The port this service will listen on, can be overridden by env variables on a server
+	port: 8080,
+
+	// The root directory for api calls
+	apiRoot: "",
+
+	datastore: {
+		type: "dynamodb",
+		params: {
+			endpoint: "http://localhost:8055",
+			region: "eu-west-1"
+		}
+	}
+
+	// The region for S3
+	s3Region: "eu-west-1"
+
+};
