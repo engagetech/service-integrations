@@ -21,7 +21,7 @@ module.exports = {
 	datastore: {
 		type: "dynamodb",
 		params: {
-			endpoint: "http://localhost:8055",
+			// endpoint: "http://localhost:8055"
 			region: "eu-west-1"
 		}
 	},
