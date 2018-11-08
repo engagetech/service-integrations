@@ -24,7 +24,7 @@ module.exports = {
 			endpoint: "http://localhost:8055",
 			region: "eu-west-1"
 		}
-	}
+	},
 
 	// The region for S3
 	s3Region: "eu-west-1"
