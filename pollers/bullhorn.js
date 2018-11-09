@@ -20,13 +20,16 @@ const PLACEMENT_UPDATED_STATUS = "plac:status:up";
 var log = null;
 
 function getPlacementIdsWithStatusChanges(subscriptionData) {
-	return _.chain(subscriptionData.events)
-		.filter((event) => {
-			return event.entityName === "Placement" && _.includes(event.updatedProperties, "status");
-		})
-		.map((event) => event.entityId)
-		.uniq()
-		.value();
+	if (subscriptionData && subscriptionData.events) {
+		return _.chain(subscriptionData.events)
+			.filter((event) => {
+				return event.entityName === "Placement" && _.includes(event.updatedProperties, "status");
+			})
+			.map((event) => event.entityId)
+			.uniq()
+			.value();
+	}
+	return [];
 }
 
 function clearDatastoreUpdate(id) {
@@ -95,8 +98,8 @@ function createPoller(integrationConfig) {
 	return () => {
 		log.info(`Polling placement status updates for ${ integrationConfig.name }`);
 		const bullhorn = Bullhorn.createOrGet(integrationConfig.bullhorn);
-		bullhorn.getSubscriptionData("placementUpdate").then(([, response]) => {
-			log.info(`Got ${ response.events.length } placement updates for subscription 'placementUpdate'`);
+		bullhorn.getSubscriptionData("placementUpdate").then(([status, response]) => {
+			log.info(`Got ${ response.events && response.events.length } placement updates (http status ${ status }) for subscription 'placementUpdate'`);
 			const ids = getPlacementIdsWithStatusChanges(response);
 			log.info(`Placements that have updated status are ${ ids.length }`);
 			ids.forEach((id) => {
