@@ -100,16 +100,14 @@ class Bullhorn {
 			return this._ensureCacheInitialized().then((bhLoginData) => {
 				this.bhLoginData = bhLoginData;
 				return f.apply(null, [this.bhLoginData, ... args]);
-			}).then((response) => {
-				if (response && response.errorCode === 401) {
+			}).then(([status, response]) => {
+				if (status === 401) {
 					return this._getLoginData().then((loginData) => {
 						this.bhLoginData = loginData;
-						return f.apply(null, [this.bhLoginData, ... args]).then((response) => {
-							return response;
-						});
+						return f.apply(null, [this.bhLoginData, ... args]);
 					});
 				}
-				return response;
+				return [status, response];
 			});
 		};
 	}
