@@ -31,6 +31,9 @@
 			"password": {
 				"S": ""
 			},
+			"redirectUri": {
+				"S": ""
+			},
 			"cronSchedule": {
 				"S": "*/30 * * * * *"
 			},
