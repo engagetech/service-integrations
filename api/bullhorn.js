@@ -75,7 +75,6 @@ class Bullhorn {
 
 		return request.getAsync(options)
 			.then(([, body]) => {
-				console.log("ASDFJASDOFHASDHFAS", body);
 				return body;
 			});
 	}
