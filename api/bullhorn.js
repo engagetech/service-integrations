@@ -28,9 +28,9 @@ class Bullhorn {
 
 	// ---- Auth Utils ----
 
-	_getAuthCode({ apiUrl, clientId, username, password }) {
+	_getAuthCode({ apiUrl, clientId, redirectUri, username, password }) {
 		const options = {
-			url: `${ apiUrl }/oauth/authorize?client_id=${ clientId }&response_type=code&redirect_uri=http://www.bullhorn.com&username=${ username }&password=${ password }&action=Login`,
+			url: `${ apiUrl }/oauth/authorize?client_id=${ clientId }&response_type=code&redirect_uri=${ redirectUri }&username=${ username }&password=${ password }&action=Login`,
 			json: true,
 			followRedirect: false
 		};
@@ -42,9 +42,9 @@ class Bullhorn {
 			});
 	}
 
-	_getTokens({ apiUrl, clientId, clientSecret, code }) {
+	_getTokens({ apiUrl, clientId, redirectUri, clientSecret, code }) {
 		const options = {
-			url: `${ apiUrl }/oauth/token?client_id=${ clientId }&client_secret=${ clientSecret }&redirect_uri=http://www.bullhorn.com&code=${ code }&grant_type=authorization_code`,
+			url: `${ apiUrl }/oauth/token?client_id=${ clientId }&client_secret=${ clientSecret }&redirect_uri=${ redirectUri }&code=${ code }&grant_type=authorization_code`,
 			json: true
 		};
 
