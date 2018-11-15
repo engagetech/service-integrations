@@ -145,6 +145,36 @@ class Bullhorn {
 		return this._withRetryingAuth(this._getEntity)(entity, id, fields);
 	}
 
+	_createEntity({ BhRestToken, restUrl }, entity, body) {
+		const options = {
+			url: `${ restUrl }entity/${ entity }`,
+			headers: { BhRestToken: BhRestToken },
+			json: true,
+			body: body
+		};
+
+		return request.putAsync(options)
+			.then(([res, body]) => {
+				return [res.statusCode, body];
+			});
+	}
+
+	/**
+	 * See http://bullhorn.github.io/rest-api-docs/#put-entity
+	 * @param {String} entity The entity to create 
+	 * @param {Object} data The creation payload
+	 * @returns {Object} A tuple of status code and an object in the following format
+	 * {
+		"changedEntityType": "JobOrder",
+		"changedEntityId": 46,
+		"changeType": "INSERT",
+		"data": { ... }
+		}
+	 */
+	createEntity(entity, data) {
+		return this._withRetryingAuth(this._createEntity)(entity, data);
+	}
+
 	_updateEntity({ BhRestToken, restUrl }, entity, id, body) {
 		const options = {
 			url: `${ restUrl }entity/${ entity }/${ id }`,

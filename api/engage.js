@@ -56,6 +56,19 @@ class Engage {
 				return [res.statusCode, body];
 			});
 	}
+
+	getVacancy(id) {
+		const options = {
+			url: `${ this.engageExternalApi }/vacancies/${ id }`,
+			headers: this._getAuthHeader(),
+			json: true
+		};
+
+		return request.getAsync(options)
+			.then(([res, body]) => {
+				return [res.statusCode, body];
+			});
+	}
 }
 
 module.exports = {
