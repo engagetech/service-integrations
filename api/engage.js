@@ -69,6 +69,20 @@ class Engage {
 				return [res.statusCode, body];
 			});
 	}
+
+	placeWorker(data) {
+		const options = {
+			url: `${ this.engageExternalApi }/vacancies/prospects`,
+			headers: this._getAuthHeader(),
+			json: true,
+			body: data
+		};
+
+		return request.postAsync(options)
+			.then(([res, body]) => {
+				return [res.statusCode, body];
+			});
+	}
 }
 
 module.exports = {

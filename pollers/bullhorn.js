@@ -15,6 +15,8 @@ const mapper = require("../api/mapper");
 
 const datastore = require("../datastore/main").createOrGet();
 
+const vacancies = require("./vacancies");
+
 const PLACEMENT_UPDATED_STATUS = "plac:status:up";
 
 var log = null;
@@ -110,7 +112,7 @@ function createPoller(integrationConfig) {
 		});
 
 		datastore.findEntityUpdates(PLACEMENT_UPDATED_STATUS).then((updates) => {
-			log.info(`Fetched ${ updates.length } status placement update(s) for processing`);
+			log.info(`Fetched ${ updates.length } status placement update(s) from datastore`);
 			updates.forEach(({ id }) => {
 				log.info(`Checking if placement ${ id } is in accepted status`);
 				bullhorn.searchEntity("Placement", ["id", "status", "candidate"], `id:${ id } AND status:Approved`).then(([, response]) => {
@@ -139,10 +141,13 @@ module.exports = {
 	addPollers: (integrationConfig) => {
 		log = integrationConfig.getLogUtils().log;
 
+		vacancies.configure(integrationConfig);
+
 		datastore.getAllIntegrations().then((integrations) => {
 			integrations.forEach((integration) => {
 				log.info(`Scheduling integration with id ${ integration.id } (${ integration.name })`);
 				cron.schedule(integration.bullhorn.cronSchedule, createPoller(integration));
+				cron.schedule(integration.bullhorn.cronSchedule, vacancies.createJobOrderPoller(integration));
 			});
 		});
 

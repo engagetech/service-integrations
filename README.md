@@ -96,10 +96,16 @@ aws --endpoint-url http://localhost:8055 dynamodb scan \
 
 ### Setup subscriptions
 
-Create the following subscription for modified placements: 
+Create the following subscription for modified `Placement`s: 
 
 ```
 /event/subscription/placementUpdate?type=entity&names=Placement&eventTypes=UPDATED
+```
+
+Create the following subscription for modified `JobOrder`s: 
+
+```
+/event/subscription/jobOrderUpdate?type=entity&names=JobOrder&eventTypes=UPDATED
 ```
 
 See http://bullhorn.github.io/rest-api-docs/#put-event-subscription
