@@ -12,6 +12,7 @@ const { Bullhorn } = require("../api/bullhorn");
 const { Engage } = require("../api/engage");
 const Promise = require("bluebird");
 const mapper = require("../api/mapper");
+const workers = require("../common/workers");
 
 const datastore = require("../datastore/main").createOrGet();
 
@@ -91,7 +92,7 @@ function parseEngageExternalId(exteranId) {
 }
 
 function submitWorkerToPlacement(integrationConfig, jobOrderId, externalId, placement) {
-	ensureWorkerExists(integrationConfig, placement.candidate.id).then((id) => {
+	workers.getOrCreateWorker(integrationConfig, placement.candidate.id, () => {}).then((id) => {
 
 		const payload = {
 			"personId": id,

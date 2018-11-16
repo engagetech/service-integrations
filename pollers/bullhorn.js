@@ -10,8 +10,7 @@ const cron = require("node-cron");
 const _ = require("lodash");
 
 const { Bullhorn } = require("../api/bullhorn");
-const { Engage } = require("../api/engage");
-const mapper = require("../api/mapper");
+const workers = require("../common/workers");
 
 const datastore = require("../datastore/main").createOrGet();
 
@@ -40,61 +39,6 @@ function clearDatastoreUpdate(id) {
 	});
 }
 
-function convertAndCreateWorker(integrationConfig, placementId, candidate) {
-	const workerPayload = mapper.candidateToWorker(integrationConfig.bullhorn, candidate);
-	log.info(`Converted candidate ${ candidate.id } to worker ${ workerPayload.EmployeeId }`);
-	const engage = new Engage(integrationConfig);
-	engage.createWorker(workerPayload)
-		.then(([status, response]) => {
-			if (status === 200) {
-				log.info(`Engage worker ${ response.EmployeeId } created`);
-				const id = response.EmployeeId;
-				const payload = {
-					action: "notification",
-					type: "registration",
-					data: {
-						"email": true,
-						"sms": true
-					}
-				};
-				log.info(`Triggering registration notification for ${ id }`);
-				engage.triggerAction(id, payload).then(() => { });
-				// avoid reprocessing if notifications fail
-				clearDatastoreUpdate(placementId);
-			}
-			else {
-				// will happen in cases like duplicate emails etc.
-				log.warn("Cannot register worker", response);
-				clearDatastoreUpdate(placementId);
-			}
-		})
-		.catch((error) => {
-			log.error("Error creating worker", error);
-		});
-}
-
-function processUpdate(integrationConfig, placementId, payload) {
-	if (payload && payload.data) {
-		const candidate = payload.data;
-
-		const prefix = integrationConfig.bullhorn.workerPrefix;
-		const engage = new Engage(integrationConfig);
-		const id = prefix + candidate.id;
-		engage.getWorker(id).then(([status]) => {
-			if (status === 404)
-				convertAndCreateWorker(integrationConfig, placementId, candidate);
-			else if (status === 200) {
-				log.info(`Worker already exists for id ${ id }`);
-				clearDatastoreUpdate(placementId);
-			}
-			else
-				log.warn(`Unexpected status code when fetching worker: ${ status }`);
-		}).catch((error) => {
-			log.warn(`Cannot fetch worker by id ${ id }. ${ error }`);
-		});
-	}
-}
-
 // Debounced polling of bullhorn candidates endpoint
 function createPoller(integrationConfig) {
 	return () => {
@@ -119,10 +63,15 @@ function createPoller(integrationConfig) {
 					if (response.data.length) {
 						response.data.forEach((updatedPlacement) => {
 							const candidateId = updatedPlacement.candidate.id;
-							bullhorn.getEntity("Candidate", candidateId, integrationConfig.bullhorn.candidateFields).then(([, candidate]) => {
-								log.info(`Fetched candidate for updated placement with candidate id ${ candidateId }`);
-								processUpdate(integrationConfig, id, candidate);
+							workers.getOrCreateWorker(integrationConfig, candidateId, () => clearDatastoreUpdate(id)).then((response) => {
+								console.log("!!!!!!", response);
+							}).catch((error) => {
+								console.log("******", error);
 							});
+							// bullhorn.getEntity("Candidate", candidateId, integrationConfig.bullhorn.candidateFields).then(([, candidate]) => {
+							// 	log.info(`Fetched candidate for updated placement with candidate id ${ candidateId }`);
+							// 	processUpdate(integrationConfig, id, candidate);
+							// });
 						});
 					} 
 					else {
@@ -142,6 +91,7 @@ module.exports = {
 		log = integrationConfig.getLogUtils().log;
 
 		vacancies.configure(integrationConfig);
+		workers.configure(integrationConfig);
 
 		datastore.getAllIntegrations().then((integrations) => {
 			integrations.forEach((integration) => {
