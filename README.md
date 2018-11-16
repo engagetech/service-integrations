@@ -102,10 +102,10 @@ Create the following subscription for modified `Placement`s:
 /event/subscription/placementUpdate?type=entity&names=Placement&eventTypes=UPDATED
 ```
 
-Create the following subscription for modified `JobOrder`s: 
+Create the following subscription for created and modified `JobSubmissions`s: 
 
 ```
-/event/subscription/jobOrderUpdate?type=entity&names=JobOrder&eventTypes=UPDATED
+/event/subscription/jobSubmissionUpdate?type=entity&names=JobSubmission&eventTypes=UPDATED,INSERTED
 ```
 
 See http://bullhorn.github.io/rest-api-docs/#put-event-subscription

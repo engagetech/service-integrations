@@ -58,6 +58,10 @@ function fetchVacancyAndCreateJobOrder(integrationConfig, bullhorn, id) {
 				}
 			});
 		}
+		else {
+			log.warn(`Could not fetch engage vacancy for id ${ id }. Removing from datastore`);
+			clearDatastoreEntry(id);
+		}
 	});
 }
 

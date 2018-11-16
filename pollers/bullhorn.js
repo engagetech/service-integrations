@@ -63,15 +63,10 @@ function createPoller(integrationConfig) {
 					if (response.data.length) {
 						response.data.forEach((updatedPlacement) => {
 							const candidateId = updatedPlacement.candidate.id;
-							workers.getOrCreateWorker(integrationConfig, candidateId, () => clearDatastoreUpdate(id)).then((response) => {
-								console.log("!!!!!!", response);
+							workers.getOrCreateWorker(integrationConfig, candidateId, () => clearDatastoreUpdate(id)).then(() => {
 							}).catch((error) => {
-								console.log("******", error);
+								log.warn(`Could not create worker for candidate id ${ candidateId }. Error: ${ error }`);
 							});
-							// bullhorn.getEntity("Candidate", candidateId, integrationConfig.bullhorn.candidateFields).then(([, candidate]) => {
-							// 	log.info(`Fetched candidate for updated placement with candidate id ${ candidateId }`);
-							// 	processUpdate(integrationConfig, id, candidate);
-							// });
 						});
 					} 
 					else {
