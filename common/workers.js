@@ -31,10 +31,7 @@ function convertAndCreateWorker(integrationConfig, candidate, callback) {
 				return Promise.resolve(response);
 			}
 			else {
-				// will happen in cases like duplicate emails etc.
-				log.warn("Cannot register worker", response);
-				callback();
-				// TODO this should not happen given that we check for this at the beggining
+				log.warn(`Cannot register worker, http ${ status }, message: $ { response.message }`);
 				return Promise.reject(response.message);
 			}
 		})

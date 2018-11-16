@@ -84,6 +84,7 @@ class DynamoDataStore {
 			// simplify the data format provided to clients
 			response.Items.forEach((integration) => {
 				integration.bullhorn.candidateFields = integration.bullhorn.candidateFields.values;
+				integration.bullhorn.jobSubmissionSyncStatuses = integration.bullhorn.jobSubmissionSyncStatuses.values;
 			});
 			return Promise.resolve(response.Items);
 		});

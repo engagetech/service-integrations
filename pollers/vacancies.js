@@ -10,7 +10,6 @@ const _ = require("lodash");
 
 const { Bullhorn } = require("../api/bullhorn");
 const { Engage } = require("../api/engage");
-const Promise = require("bluebird");
 const mapper = require("../api/mapper");
 const workers = require("../common/workers");
 
@@ -78,29 +77,6 @@ function parseEngageExternalId(exteranId) {
 	return Number(exteranId.replace("ENG-", ""));
 }
 
-const data = {
-    "data": {
-        "id": 43,
-        "candidate": {
-            "id": 86,
-            "firstName": "Wizzard",
-            "lastName": "1"
-        },
-        "status": "CV Sent",
-        "jobOrder": {
-            "id": 52,
-            "title": "Snr UX Designer",
-            "externalID": "ENG-5911",
-            "startDate": 1542258000000,
-            "dateEnd": null,
-            "durationWeeks": 2,
-            "payRate": 0,
-            "clientBillRate": null
-        },
-        "payRate": null
-    }
-}
-
 function submitWorkerToPlacement(integrationConfig, jobSubmission) {
 	workers.getOrCreateWorker(integrationConfig, jobSubmission.candidate.id, () => clearDatastoreUpdate(jobSubmission.id)).then((worker) => {
 
@@ -112,8 +88,8 @@ function submitWorkerToPlacement(integrationConfig, jobSubmission) {
 			"rates": [
 				{
 					"name": "rate",
-					"payRate": jobSubmission.jobOrder.payRate,
-					"chargeTotal": jobSubmission.jobOrder.clientBillRate || 0,
+					"payRate": jobSubmission.payRate || 0,
+					"chargeTotal": jobSubmission.billRate || 0,
 					"payType": "CONTRACT", // TODO find out the type
 					"rateType": "HOURLY" // TODO
 
@@ -136,22 +112,12 @@ function submitWorkerToPlacement(integrationConfig, jobSubmission) {
 	});
 }
 
-function processJobSubmission(integrationConfig, jobOrderId, externalID, placementId) {
-	const bullhorn = Bullhorn.createOrGet(integrationConfig.bullhorn);
-	log.info(`Processing Placement ${ placementId } for JobOrder ${ jobOrderId }`);
-	bullhorn.getEntity("Placement", placementId, ["id", "candidate", "dateBegin", "dateEnd", "durationWeeks", "payRate", "clientBillRate"])
-		.then(([status, response]) => {
-			log.info(`Fetched placement ${ placementId }, http status is ${ status }`);
-			if (status === 200)
-				submitWorkerToPlacement(integrationConfig, jobOrderId, externalID, response.data);
-			else {
-				log.info(`Fetching placement for id ${ placementId } resulted into http ${ status }. Removing update from datastore`);
-				clearDatastoreUpdate(jobOrderId);
-			}
-		});
+function isSyncStatus(statuses, status) {
+	return _.isEmpty(statuses) || _.includes(statuses, status);
 }
 
 function processUpdate(integrationConfig, jobSubmission) {
+	const statuses = integrationConfig.bullhorn.jobSubmissionSyncStatuses;
 	log.info(`Processing JobSubmission ${ jobSubmission.id }`);
 	if (!jobSubmission.jobOrder) {
 		log.warn(`JobSubmission ${ jobSubmission.id } has no JobOrder. Removing from datastore`);
@@ -161,10 +127,12 @@ function processUpdate(integrationConfig, jobSubmission) {
 		log.info(`JobOrder ${ jobSubmission.id } is not from Engage. Removing from datastore`);
 		clearDatastoreUpdate(jobSubmission.id);
 	}
-	else {
-		// TODO add check to status
-		submitWorkerToPlacement(integrationConfig, jobSubmission);
+	else if (!isSyncStatus(statuses, jobSubmission.status)) {
+		log.info(`Not a job submission status we are interested in ${ jobSubmission.status }. Removing from datastore`);
+		clearDatastoreUpdate(jobSubmission.id);
 	}
+	else
+		submitWorkerToPlacement(integrationConfig, jobSubmission);
 }
 
 function processUpdates(integrationConfig) {
@@ -173,7 +141,7 @@ function processUpdates(integrationConfig) {
 	datastore.findEntityUpdates(JOB_SUBMISSION_UPDATE).then((updates) => {
 		log.info(`Fetched ${ updates.length } job submission update(s) for datastore`);
 		updates.forEach(({ id }) => {
-			bullhorn.getEntity("JobSubmission", id, ["id", "candidate", "status", "jobOrder(externalID, startDate, dateEnd, durationWeeks, payRate, clientBillRate)"])
+			bullhorn.getEntity("JobSubmission", id, ["id", "candidate", "status", "payRate", "billRate", "jobOrder(externalID, startDate, dateEnd, durationWeeks, payRate, clientBillRate)"])
 				.then(([status, response]) => {
 					if (status == 200)
 						processUpdate(integrationConfig, response.data);

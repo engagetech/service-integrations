@@ -86,6 +86,9 @@
 					}
 				}
 			}
+			"jobSubmissionSyncStatuses" : {
+				"SS": ["CV Sent"]
+			}
 		}
 	}
 }

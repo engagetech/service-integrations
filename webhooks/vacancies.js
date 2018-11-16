@@ -87,7 +87,7 @@ function processVacancyVendorInvitation(integrationConfig, id) {
 }
 
 function processUnprocessedItems(integrationConfig) {
-	log.info("Processing stale vendor invited items");
+	log.info("Processing vendor invitations");
 	datastore.findEntityUpdates(VACANCY_VENDOR_INVITED).then((invitations) => {
 		invitations.forEach(({ id }) => {
 			processVacancyVendorInvitation(integrationConfig, id);
@@ -103,12 +103,9 @@ function vacancyVendorInvited(integrationConfig, { id }) {
 
 	log.info(`Handling vendor invitation for vacancy ${ id }`);
 
-	// TODO when?
-	// processUnprocessedItems(integrationConfig); 
+	processUnprocessedItems(integrationConfig); 
 
-	datastore.upsertEntityUpdate(VACANCY_VENDOR_INVITED, id).then(() => {
-		processVacancyVendorInvitation(integrationConfig, id);
-	}).catch((response) => {
+	datastore.upsertEntityUpdate(VACANCY_VENDOR_INVITED, id).catch((response) => {
 		log.error(response);
 	});
 }
