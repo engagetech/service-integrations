@@ -53,7 +53,7 @@ function fetchVacancyAndCreateJobOrder(integrationConfig, bullhorn, id) {
 							"externalID": externalId
 						};
 
-						log.info(`Creating JobOrder ${ payload } `);
+						log.info(`Creating JobOrder ${ JSON.stringify(payload) } `);
 						bullhorn.createEntity("JobOrder", payload).then(([status]) => {
 							if (status === 200) {
 								log.info(`JobOrder created successfully for vacancy ${ id }`);
