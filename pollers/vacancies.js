@@ -91,8 +91,8 @@ function submitWorkerToPlacement(integrationConfig, jobSubmission) {
 					"payRate": jobSubmission.payRate || 0,
 					"chargeTotal": jobSubmission.billRate || 0,
 					"payType": "CONTRACT", // TODO find out the type
-					"rateType": "HOURLY" // TODO
-
+					"rateType": "HOURLY", // TODO
+					"primary": true
 				}
 			]
 		};

@@ -16,7 +16,8 @@ var log = null;
 
 const actionFuncs = {
 	"workerupdate": workers.workerUpdated,
-	"vacancyvendorinvited": vacancies.vacancyVendorInvited
+	"vacancyvendorinvited": vacancies.vacancyVendorInvited,
+	"vacancysubmissionstatuschanged": vacancies.vacancySubmissionStatusChanged
 };
 
 function webhookDispatcher(request, response, next) {

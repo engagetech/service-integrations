@@ -17,9 +17,10 @@ class DynamoDataStore {
 	 * Adds a record indicating this entity will have to be processed
 	 * @param {String} entity candidate etc.
 	 * @param {number} id the id of the
+	 * @param {Object} data additional information to store
 	 * @returns {Promise} Nothing should be expected as a return
 	 */
-	upsertEntityUpdate(entity, id) {
+	upsertEntityUpdate(entity, id, data = {}) {
 		const params = {
 			TableName: "EntityUpdates",
 			Item: {
@@ -27,9 +28,7 @@ class DynamoDataStore {
 				"id": id,
 				// added as a potential debugging info
 				// clients should not expect this to exist
-				"info": {
-					"createdDate": Date.now() 
-				}
+				"data": data
 			}
 		};
 		return this.docClient.put(params).promise();

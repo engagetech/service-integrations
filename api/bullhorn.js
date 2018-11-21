@@ -228,6 +228,35 @@ class Bullhorn {
 		return this._withRetryingAuth(this._searchEntity)(entity, fields, query);
 	}
 
+
+	// ---------- Query ----------------
+
+	_queryEntity({ BhRestToken, restUrl }, entity, fields, where) {
+		const fieldsParam = fields.join(",");
+		const options = {
+			url: `${ restUrl }query/${ entity }?fields=${ fieldsParam }&where=${ where }`,
+			headers: { BhRestToken: BhRestToken },
+			json: true
+		};
+
+		return request.getAsync(options)
+			.then(([res, body]) => {
+				return [res.statusCode, body];
+			});
+	}
+
+	/**
+	 * See http://bullhorn.github.io/rest-api-docs/#query
+	 * @param {String} entity The entity type 
+	 * @param {Array} fields A string array of the fields to return
+	 * @param {String} where where clause
+	 * @returns {Array} A tuple of status code and an array of the matching entities,
+	 * having the queried fields
+	 */
+	queryEntity(entity, fields, where) {
+		return this._withRetryingAuth(this._queryEntity)(entity, fields, where);
+	}
+
 	// ---- Subscriptions -----
 
 	_createSubscription({ BhRestToken, restUrl }, subscription, type, names, eventTypes) {
