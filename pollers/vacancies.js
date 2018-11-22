@@ -100,7 +100,7 @@ function submitWorkerToPlacement(integrationConfig, jobSubmission) {
 		const engage = new Engage(integrationConfig);
 		engage.placeWorker(payload).then(([status, response]) => {
 			if (status === 201)
-				log.info(`Worker ${ worker.Id } was placed successfully to placement ${ response.id }`);
+				log.info(`Worker ${ worker.Id } was placed successfully. Submission id: ${ response.id }`);
 			else {
 				log.info(`Could not place worker. Http code ${ status }. Response: ${ response.message }. Removing update from datastore`);
 				clearDatastoreUpdate(jobSubmission.id); 
@@ -139,7 +139,7 @@ function processUpdates(integrationConfig) {
 	const bullhorn = Bullhorn.createOrGet(integrationConfig.bullhorn);
 
 	datastore.findEntityUpdates(JOB_SUBMISSION_UPDATE).then((updates) => {
-		log.info(`Fetched ${ updates.length } job submission update(s) for datastore`);
+		log.info(`Fetched ${ updates.length } job submission update(s) from datastore`);
 		updates.forEach(({ id }) => {
 			bullhorn.getEntity("JobSubmission", id, ["id", "candidate", "status", "payRate", "billRate", "jobOrder(externalID, startDate, dateEnd, durationWeeks, payRate, clientBillRate)"])
 				.then(([status, response]) => {

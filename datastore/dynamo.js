@@ -26,8 +26,6 @@ class DynamoDataStore {
 			Item: {
 				"entity": entity,
 				"id": id,
-				// added as a potential debugging info
-				// clients should not expect this to exist
 				"data": data
 			}
 		};

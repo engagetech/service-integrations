@@ -10,11 +10,12 @@ const cron = require("node-cron");
 const _ = require("lodash");
 
 const { Bullhorn } = require("../api/bullhorn");
-const workers = require("../common/workers");
 
 const datastore = require("../datastore/main").createOrGet();
 
+const workers = require("../common/workers");
 const vacancies = require("./vacancies");
+const placements = require("./placements");
 
 const PLACEMENT_UPDATED_STATUS = "plac:status:up";
 
@@ -87,12 +88,14 @@ module.exports = {
 
 		vacancies.configure(integrationConfig);
 		workers.configure(integrationConfig);
+		placements.configure(integrationConfig);
 
 		datastore.getAllIntegrations().then((integrations) => {
 			integrations.forEach((integration) => {
 				log.info(`Scheduling integration with id ${ integration.id } (${ integration.name })`);
 				cron.schedule(integration.bullhorn.cronSchedule, createPoller(integration));
 				cron.schedule(integration.bullhorn.cronSchedule, vacancies.createJobOrderPoller(integration));
+				cron.schedule(integration.bullhorn.cronSchedule, placements.createPlacementsPoller(integration));
 			});
 		});
 

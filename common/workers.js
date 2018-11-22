@@ -31,7 +31,7 @@ function convertAndCreateWorker(integrationConfig, candidate, callback) {
 				return Promise.resolve(response);
 			}
 			else {
-				log.warn(`Cannot register worker, http ${ status }, message: $ { response.message }`);
+				log.warn(`Cannot register worker, http ${ status }, message: ${ JSON.stringify(response) }`);
 				return Promise.reject(response.message);
 			}
 		})

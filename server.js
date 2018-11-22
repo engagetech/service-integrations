@@ -124,7 +124,8 @@ server.on("uncaughtException", (request, response, route, error) => {
 var serverIP = process.env.server_ip || config.ip;
 var serverPort = process.env.server_port || config.port;
 
-console.log(`╦┌┐┌┌┬┐┌─┐┌─┐┬─┐┌─┐┌┬┐┬┌─┐┌┐┌┌─┐
+console.log(`
+╦┌┐┌┌┬┐┌─┐┌─┐┬─┐┌─┐┌┬┐┬┌─┐┌┐┌┌─┐
 ║│││ │ ├┤ │ ┬├┬┘├─┤ │ ││ ││││└─┐
 ╩┘└┘ ┴ └─┘└─┘┴└─┴ ┴ ┴ ┴└─┘┘└┘└─┘
 `);
