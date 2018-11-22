@@ -31,6 +31,9 @@
 			"password": {
 				"S": ""
 			},
+			"redirectUri": {
+				"S": ""
+			},
 			"cronSchedule": {
 				"S": "*/30 * * * * *"
 			},
@@ -82,6 +85,9 @@
 						}
 					}
 				}
+			}
+			"jobSubmissionSyncStatuses" : {
+				"SS": ["CV Sent"]
 			}
 		}
 	}

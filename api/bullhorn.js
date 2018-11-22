@@ -28,9 +28,9 @@ class Bullhorn {
 
 	// ---- Auth Utils ----
 
-	_getAuthCode({ apiUrl, clientId, username, password }) {
+	_getAuthCode({ apiUrl, clientId, redirectUri, username, password }) {
 		const options = {
-			url: `${ apiUrl }/oauth/authorize?client_id=${ clientId }&response_type=code&redirect_uri=http://www.bullhorn.com&username=${ username }&password=${ password }&action=Login`,
+			url: `${ apiUrl }/oauth/authorize?client_id=${ clientId }&response_type=code&redirect_uri=${ redirectUri }&username=${ username }&password=${ password }&action=Login`,
 			json: true,
 			followRedirect: false
 		};
@@ -42,9 +42,9 @@ class Bullhorn {
 			});
 	}
 
-	_getTokens({ apiUrl, clientId, clientSecret, code }) {
+	_getTokens({ apiUrl, clientId, redirectUri, clientSecret, code }) {
 		const options = {
-			url: `${ apiUrl }/oauth/token?client_id=${ clientId }&client_secret=${ clientSecret }&redirect_uri=http://www.bullhorn.com&code=${ code }&grant_type=authorization_code`,
+			url: `${ apiUrl }/oauth/token?client_id=${ clientId }&client_secret=${ clientSecret }&redirect_uri=${ redirectUri }&code=${ code }&grant_type=authorization_code`,
 			json: true
 		};
 
@@ -100,16 +100,14 @@ class Bullhorn {
 			return this._ensureCacheInitialized().then((bhLoginData) => {
 				this.bhLoginData = bhLoginData;
 				return f.apply(null, [this.bhLoginData, ... args]);
-			}).then((response) => {
-				if (response && response.errorCode === 401) {
+			}).then(([status, response]) => {
+				if (status === 401) {
 					return this._getLoginData().then((loginData) => {
 						this.bhLoginData = loginData;
-						return f.apply(null, [this.bhLoginData, ... args]).then((response) => {
-							return response;
-						});
+						return f.apply(null, [this.bhLoginData, ... args]);
 					});
 				}
-				return response;
+				return [status, response];
 			});
 		};
 	}
@@ -145,6 +143,36 @@ class Bullhorn {
 	 */
 	getEntity(entity, id, fields) {
 		return this._withRetryingAuth(this._getEntity)(entity, id, fields);
+	}
+
+	_createEntity({ BhRestToken, restUrl }, entity, body) {
+		const options = {
+			url: `${ restUrl }entity/${ entity }`,
+			headers: { BhRestToken: BhRestToken },
+			json: true,
+			body: body
+		};
+
+		return request.putAsync(options)
+			.then(([res, body]) => {
+				return [res.statusCode, body];
+			});
+	}
+
+	/**
+	 * See http://bullhorn.github.io/rest-api-docs/#put-entity
+	 * @param {String} entity The entity to create 
+	 * @param {Object} data The creation payload
+	 * @returns {Object} A tuple of status code and an object in the following format
+	 * {
+		"changedEntityType": "JobOrder",
+		"changedEntityId": 46,
+		"changeType": "INSERT",
+		"data": { ... }
+		}
+	 */
+	createEntity(entity, data) {
+		return this._withRetryingAuth(this._createEntity)(entity, data);
 	}
 
 	_updateEntity({ BhRestToken, restUrl }, entity, id, body) {
@@ -198,6 +226,35 @@ class Bullhorn {
 	 */
 	searchEntity(entity, fields, query) {
 		return this._withRetryingAuth(this._searchEntity)(entity, fields, query);
+	}
+
+
+	// ---------- Query ----------------
+
+	_queryEntity({ BhRestToken, restUrl }, entity, fields, where) {
+		const fieldsParam = fields.join(",");
+		const options = {
+			url: `${ restUrl }query/${ entity }?fields=${ fieldsParam }&where=${ where }`,
+			headers: { BhRestToken: BhRestToken },
+			json: true
+		};
+
+		return request.getAsync(options)
+			.then(([res, body]) => {
+				return [res.statusCode, body];
+			});
+	}
+
+	/**
+	 * See http://bullhorn.github.io/rest-api-docs/#query
+	 * @param {String} entity The entity type 
+	 * @param {Array} fields A string array of the fields to return
+	 * @param {String} where where clause
+	 * @returns {Array} A tuple of status code and an array of the matching entities,
+	 * having the queried fields
+	 */
+	queryEntity(entity, fields, where) {
+		return this._withRetryingAuth(this._queryEntity)(entity, fields, where);
 	}
 
 	// ---- Subscriptions -----

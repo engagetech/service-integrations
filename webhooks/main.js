@@ -8,13 +8,16 @@ Include all the routes that the service will listen to
 
 const _ = require("lodash");
 
-const workers = require("./workers.js");
+const workers = require("./workers");
+const vacancies = require("./vacancies");
 const datastore = require("../datastore/main").createOrGet();
 
 var log = null;
 
 const actionFuncs = {
-	"workerupdate": workers.workerUpdated
+	"workerupdate": workers.workerUpdated,
+	"vacancyvendorinvited": vacancies.vacancyVendorInvited,
+	"vacancysubmissionstatuschanged": vacancies.vacancySubmissionStatusChanged
 };
 
 function webhookDispatcher(request, response, next) {
@@ -52,6 +55,7 @@ module.exports = {
 	register: (integrationConfig) => {
 		log = integrationConfig.getLogUtils().log;
 		workers.configure(integrationConfig);
+		vacancies.configure(integrationConfig);
 		integrationConfig.post("webhook/:token", webhookDispatcher);
 	}
 };

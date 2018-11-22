@@ -17,19 +17,16 @@ class DynamoDataStore {
 	 * Adds a record indicating this entity will have to be processed
 	 * @param {String} entity candidate etc.
 	 * @param {number} id the id of the
+	 * @param {Object} data additional information to store
 	 * @returns {Promise} Nothing should be expected as a return
 	 */
-	upsertEntityUpdate(entity, id) {
+	upsertEntityUpdate(entity, id, data = {}) {
 		const params = {
 			TableName: "EntityUpdates",
 			Item: {
 				"entity": entity,
 				"id": id,
-				// added as a potential debugging info
-				// clients should not expect this to exist
-				"info": {
-					"createdDate": Date.now() 
-				}
+				"data": data
 			}
 		};
 		return this.docClient.put(params).promise();
@@ -84,6 +81,7 @@ class DynamoDataStore {
 			// simplify the data format provided to clients
 			response.Items.forEach((integration) => {
 				integration.bullhorn.candidateFields = integration.bullhorn.candidateFields.values;
+				integration.bullhorn.jobSubmissionSyncStatuses = integration.bullhorn.jobSubmissionSyncStatuses.values;
 			});
 			return Promise.resolve(response.Items);
 		});
