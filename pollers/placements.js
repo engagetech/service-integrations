@@ -73,8 +73,10 @@ function placeMatchingProspects(integrationConfig, placementId, candidateId, pro
 	matchingProspects.forEach(({ id, personExternalId }) => {
 		log.info(`Setting prospect ${ id } (worker ${ personExternalId }) placement status to confirmed`);
 		engage.updateProspectStatus(id, "CONFIRMED").then(([status, response]) => {
-			if (status === 204)
+			if (status === 204) {
 				log.info(`Worker's ${ personExternalId } (prospect ${ id }) status was successfully set to confirmed. Removing from datastore`);
+				clearDatastoreUpdate(placementId);
+			}
 			else 
 				log.warn(`Unexpected status ${ status } (response: ${ JSON.stringify(response) }) when setting worker ${ personExternalId } (prospect ${ id }) to confirmed.`);
 		});
