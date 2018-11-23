@@ -159,20 +159,9 @@ function processVacancySubmissionRejected(integrationConfig, id, data) {
 
 // --- Hook handlers
 
-function processUnprocessedItems(integrationConfig) {
-	log.info("Processing vendor invitations");
-	datastore.findEntityUpdates(VACANCY_VENDOR_INVITED).then((invitations) => {
-		invitations.forEach(({ id }) => {
-			processVacancyVendorInvitation(integrationConfig, id);
-		});
-	});
-}
-
 function vacancyVendorInvited(integrationConfig, { id }) {
 
 	log.info(`Handling vendor invitation for vacancy ${ id }`);
-
-	processUnprocessedItems(integrationConfig); 
 
 	datastore.upsertEntityUpdate(VACANCY_VENDOR_INVITED, id).catch((response) => {
 		log.error(response);
@@ -181,10 +170,12 @@ function vacancyVendorInvited(integrationConfig, { id }) {
 
 function vacancySubmissionStatusChanged(integrationConfig, { id, workerId, submissionId, submissionStatus }) {
 	if (submissionStatus === "ACCEPTED") {
+		log.info(`Handling vacancy ${ id } submission status change to ${ submissionStatus }`);
 		datastore.upsertEntityUpdate(VACANCY_SUBMISSION_ACCEPTED, submissionId, { "vacancyId": id, "workerId": workerId })
 			.then(() => {});
 	}
 	else if (submissionStatus === "REJECTED") {
+		log.info(`Handling vacancy ${ id } submission status change to ${ submissionStatus }`);
 		datastore.upsertEntityUpdate(VACANCY_SUBMISSION_REJECTED, submissionId, { "vacancyId": id, "workerId": workerId })
 			.then(() => {});
 	} 
