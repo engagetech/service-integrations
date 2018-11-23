@@ -1,6 +1,7 @@
 "use strict";
 
 const cron = require("node-cron");
+const _ = require("lodash");
 
 const { Engage } = require("../api/engage");
 const { Bullhorn } = require("../api/bullhorn");
@@ -47,7 +48,7 @@ function fetchVacancyAndCreateJobOrder(integrationConfig, bullhorn, id) {
 			const title = response.tradeName;
 			const startDate = Date.parse(response.startDate);
 			const endDate = response.finishDate && Date.parse(response.finishDate);
-			const description = `${ response.brief }\n\nSkills: ${ response.qualifications }`;
+			const description = `<p>${ response.brief }</p><p>Skills: ${ response.qualifications }</p>`;
 
 			const rate = primaryOrFirstRate(response.rates);
 			const salary = rate.payRate;
