@@ -29,13 +29,32 @@ function idToExternalId(id) {
 
 // ------ Event Processors ----
 
+function primaryOrFirstRate(rates) {
+	const primaryRates = _.filter(rates, (r) => r.primary);
+	if (primaryRates.length)
+		return primaryRates[0];
+	else
+		return rates[0];
+}
+
 function fetchVacancyAndCreateJobOrder(integrationConfig, bullhorn, id) {
 	const engage = new Engage(integrationConfig);
 
 	engage.getVacancy(id).then(([status, response]) => {
 		if (status === 200) {
 			const managerEmail = response.hiringManager.email; 
-			const title = response.tradeName; // TODO mapping
+
+			const title = response.tradeName;
+			const startDate = Date.parse(response.startDate);
+			const endDate = response.finishDate && Date.parse(response.finishDate);
+			const description = `${ response.brief }\n\nSkills: ${ response.qualifications }`;
+
+			const rate = primaryOrFirstRate(response.rates);
+			const salary = rate.payRate;
+			const salaryUnit = rate.rateType;
+			const numOpenings = response.numberOfVacancies;
+			const source = "Engage";
+
 			log.info(`Fetched engage vacancy for id ${ id }. Fetching ClientContacts for ${ managerEmail }`);
 			bullhorn.searchEntity("ClientContact", ["id", "clientCorporation"], "email:" + managerEmail).then(([status, response]) => {
 				if (status === 200) {
@@ -49,8 +68,16 @@ function fetchVacancyAndCreateJobOrder(integrationConfig, bullhorn, id) {
 						const payload = {
 							"clientContact": { "id": contactId },
 							"clientCorporation": { "id": corporationId },
+							"externalID": externalId,
+
 							"title": title,
-							"externalID": externalId
+							"startDate": startDate,
+							"dateEnd": endDate,
+							"description": description,
+							"salary": salary,
+							"salaryUnit": salaryUnit,
+							"numOpenings": numOpenings,
+							"source": source
 						};
 
 						log.info(`Creating JobOrder ${ JSON.stringify(payload) } `);
@@ -91,7 +118,7 @@ function processVacancyVendorInvitation(integrationConfig, id) {
 			if (response.total === 0) 
 				fetchVacancyAndCreateJobOrder(integrationConfig, bullhorn, id);
 			else {
-				log.info(`Not creating vacancy as there are existing ones for ${ extId }`);
+				log.info(`Not creating vacancy as there is an existing one for ${ extId }`);
 				clearDatastoreEntry(VACANCY_VENDOR_INVITED, id);
 			}
 		}
