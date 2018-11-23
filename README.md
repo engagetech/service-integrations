@@ -2,12 +2,12 @@
 
 > **Note:** Work in progress
 
-A (possibly) temporary service for integrating Engage&#39;s public API with other SaaS platform APIs.
+A service for integrating Engage&#39;s public API with the [Bullhorn API](http://bullhorn.github.io/).
 
 
 ## Setup
 
-First you need to setup the config files, prepare the db and create the necessary bullhorn subscrpitions
+First you need to setup the config files, prepare the db and create the necessary bullhorn subscriptions
 
 
 ### Config 
