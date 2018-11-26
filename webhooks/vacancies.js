@@ -28,6 +28,15 @@ function idToExternalId(id) {
 	return "ENG-" + id;
 }
 
+function parseToMillisAndShiftDate(date, tzOffset) {
+	if (date) {
+		var startDate = new Date(Date.parse(date));
+		startDate.setHours(startDate.getHours() + tzOffset);
+		return startDate.getTime();
+	}
+	return undefined;
+}
+
 // ------ Event Processors ----
 
 function primaryOrFirstRate(rates) {
@@ -46,8 +55,8 @@ function fetchVacancyAndCreateJobOrder(integrationConfig, bullhorn, id) {
 			const managerEmail = response.hiringManager.email; 
 
 			const title = response.tradeName;
-			const startDate = Date.parse(response.startDate);
-			const endDate = response.finishDate && Date.parse(response.finishDate);
+			const startDate = parseToMillisAndShiftDate(response.startDate, integrationConfig.bullhorn.tzOffset);
+			const endDate = parseToMillisAndShiftDate(response.finishDate, integrationConfig.bullhorn.tzOffset);
 			const description = `<p>${ response.brief }</p><p>Skills: ${ response.qualifications }</p>`;
 
 			const rate = primaryOrFirstRate(response.rates);

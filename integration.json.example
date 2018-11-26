@@ -37,6 +37,9 @@
 			"cronSchedule": {
 				"S": "*/30 * * * * *"
 			},
+			"tzOffset": {
+				"N": "5"
+			},
 			"workerPrefix": {
 				"S": "BH-"
 			},
