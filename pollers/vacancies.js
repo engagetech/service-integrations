@@ -77,36 +77,45 @@ function parseEngageExternalId(exteranId) {
 	return Number(exteranId.replace("ENG-", ""));
 }
 
+// TODO duplicated
+function primaryOrFirstRate(rates) {
+	const primaryRates = _.filter(rates, (r) => r.primary);
+	if (primaryRates.length)
+		return primaryRates[0];
+	else
+		return rates[0];
+}
+
 function submitWorkerToPlacement(integrationConfig, jobSubmission) {
+	const engage = new Engage(integrationConfig);
+
 	workers.getOrCreateWorker(integrationConfig, jobSubmission.candidate.id, () => clearDatastoreUpdate(jobSubmission.id)).then((worker) => {
+		const vacancyId = parseEngageExternalId(jobSubmission.jobOrder.externalID);
+		engage.getVacancy(vacancyId).then(([status, response]) => {
+			if (status === 200) {
+				log.info(`Fetched engage vacancy for ${ vacancyId } to get the the primary rate`);
+				// by convention we pick the first or the primary
+				const rate = primaryOrFirstRate(response.rates);
+				const payload = {
+					"personId": worker.Id,
+					"vacancyDetailId": vacancyId,
+					"finishDate": calculateAndFormatEndDate(jobSubmission.jobOrder),
+					"startDate": timestampToDate(jobSubmission.jobOrder.startDate),
+					"rates": [Object.assign(rate, { primary: true })] //make sure it's primary
+				};
 
-		const payload = {
-			"personId": worker.Id,
-			"vacancyDetailId": parseEngageExternalId(jobSubmission.jobOrder.externalID),
-			"finishDate": calculateAndFormatEndDate(jobSubmission.jobOrder),
-			"startDate": timestampToDate(jobSubmission.jobOrder.startDate),
-			"rates": [
-				{
-					"name": "rate",
-					"payRate": jobSubmission.payRate || 0,
-					"chargeTotal": jobSubmission.billRate || 0,
-					"payType": "CONTRACT", // TODO find out the type
-					"rateType": "HOURLY", // TODO
-					"primary": true
-				}
-			]
-		};
-
-		const engage = new Engage(integrationConfig);
-		engage.placeWorker(payload).then(([status, response]) => {
-			if (status === 201)
-				log.info(`Worker ${ worker.Id } was placed successfully. Submission id: ${ response.id }`);
-			else {
-				log.info(`Could not place worker. Http code ${ status }. Response: ${ response.message }. Removing update from datastore`);
-				clearDatastoreUpdate(jobSubmission.id); 
+				engage.placeWorker(payload).then(([status, response]) => {
+					if (status === 201)
+						log.info(`Worker ${ worker.Id } was placed successfully. Submission id: ${ response.id }`);
+					else {
+						log.info(`Could not place worker. Http code ${ status }. Response: ${ response.message }. Removing update from datastore`);
+						clearDatastoreUpdate(jobSubmission.id);
+					}
+				});
 			}
+			else
+				log.warn(`Cannot fetch Engage vacancy ${ vacancyId }, status code ${ status }`);
 		});
-
 	}).catch((error) => {
 		log.warn("Cannot submit worker to placement: " + error);
 	});
@@ -141,7 +150,7 @@ function processUpdates(integrationConfig) {
 	datastore.findEntityUpdates(JOB_SUBMISSION_UPDATE).then((updates) => {
 		log.info(`Fetched ${ updates.length } job submission update(s) from datastore`);
 		updates.forEach(({ id }) => {
-			bullhorn.getEntity("JobSubmission", id, ["id", "candidate", "status", "payRate", "billRate", "jobOrder(externalID, startDate, dateEnd, durationWeeks, payRate, clientBillRate)"])
+			bullhorn.getEntity("JobSubmission", id, ["id", "candidate", "status", "payRate", "billRate", "jobOrder(externalID, startDate, dateEnd, durationWeeks, payRate, clientBillRate, employmentType)"])
 				.then(([status, response]) => {
 					if (status == 200)
 						processUpdate(integrationConfig, response.data);
