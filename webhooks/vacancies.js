@@ -1,6 +1,7 @@
 "use strict";
 
 const cron = require("node-cron");
+const _ = require("lodash");
 
 const { Engage } = require("../api/engage");
 const { Bullhorn } = require("../api/bullhorn");
@@ -27,7 +28,24 @@ function idToExternalId(id) {
 	return "ENG-" + id;
 }
 
+function parseToMillisAndShiftDate(date, tzOffset) {
+	if (date) {
+		var startDate = new Date(Date.parse(date));
+		startDate.setHours(startDate.getHours() + tzOffset);
+		return startDate.getTime();
+	}
+	return undefined;
+}
+
 // ------ Event Processors ----
+
+function primaryOrFirstRate(rates) {
+	const primaryRates = _.filter(rates, (r) => r.primary);
+	if (primaryRates.length)
+		return primaryRates[0];
+	else
+		return rates[0];
+}
 
 function fetchVacancyAndCreateJobOrder(integrationConfig, bullhorn, id) {
 	const engage = new Engage(integrationConfig);
@@ -35,7 +53,19 @@ function fetchVacancyAndCreateJobOrder(integrationConfig, bullhorn, id) {
 	engage.getVacancy(id).then(([status, response]) => {
 		if (status === 200) {
 			const managerEmail = response.hiringManager.email; 
-			const title = response.tradeName; // TODO mapping
+
+			const title = response.tradeName;
+			const startDate = parseToMillisAndShiftDate(response.startDate, integrationConfig.bullhorn.tzOffset);
+			const endDate = parseToMillisAndShiftDate(response.finishDate, integrationConfig.bullhorn.tzOffset);
+			const description = `<p>${ response.brief }</p><p>Skills: ${ response.qualifications }</p>`;
+
+			const rate = primaryOrFirstRate(response.rates);
+			const salary = rate.payRate;
+			const salaryUnit = rate.rateType;
+			const employmentType = rate.payType;
+			const numOpenings = response.numberOfVacancies;
+			const source = "Engage";
+
 			log.info(`Fetched engage vacancy for id ${ id }. Fetching ClientContacts for ${ managerEmail }`);
 			bullhorn.searchEntity("ClientContact", ["id", "clientCorporation"], "email:" + managerEmail).then(([status, response]) => {
 				if (status === 200) {
@@ -49,8 +79,17 @@ function fetchVacancyAndCreateJobOrder(integrationConfig, bullhorn, id) {
 						const payload = {
 							"clientContact": { "id": contactId },
 							"clientCorporation": { "id": corporationId },
+							"externalID": externalId,
+
 							"title": title,
-							"externalID": externalId
+							"startDate": startDate,
+							"dateEnd": endDate,
+							"description": description,
+							"salary": salary,
+							"salaryUnit": salaryUnit,
+							"numOpenings": numOpenings,
+							"employmentType": employmentType,
+							"source": source
 						};
 
 						log.info(`Creating JobOrder ${ JSON.stringify(payload) } `);
@@ -91,7 +130,7 @@ function processVacancyVendorInvitation(integrationConfig, id) {
 			if (response.total === 0) 
 				fetchVacancyAndCreateJobOrder(integrationConfig, bullhorn, id);
 			else {
-				log.info(`Not creating vacancy as there are existing ones for ${ extId }`);
+				log.info(`Not creating vacancy as there is an existing one for ${ extId }`);
 				clearDatastoreEntry(VACANCY_VENDOR_INVITED, id);
 			}
 		}
@@ -159,20 +198,9 @@ function processVacancySubmissionRejected(integrationConfig, id, data) {
 
 // --- Hook handlers
 
-function processUnprocessedItems(integrationConfig) {
-	log.info("Processing vendor invitations");
-	datastore.findEntityUpdates(VACANCY_VENDOR_INVITED).then((invitations) => {
-		invitations.forEach(({ id }) => {
-			processVacancyVendorInvitation(integrationConfig, id);
-		});
-	});
-}
-
 function vacancyVendorInvited(integrationConfig, { id }) {
 
 	log.info(`Handling vendor invitation for vacancy ${ id }`);
-
-	processUnprocessedItems(integrationConfig); 
 
 	datastore.upsertEntityUpdate(VACANCY_VENDOR_INVITED, id).catch((response) => {
 		log.error(response);
@@ -181,10 +209,12 @@ function vacancyVendorInvited(integrationConfig, { id }) {
 
 function vacancySubmissionStatusChanged(integrationConfig, { id, workerId, submissionId, submissionStatus }) {
 	if (submissionStatus === "ACCEPTED") {
+		log.info(`Handling vacancy ${ id } submission status change to ${ submissionStatus }`);
 		datastore.upsertEntityUpdate(VACANCY_SUBMISSION_ACCEPTED, submissionId, { "vacancyId": id, "workerId": workerId })
 			.then(() => {});
 	}
 	else if (submissionStatus === "REJECTED") {
+		log.info(`Handling vacancy ${ id } submission status change to ${ submissionStatus }`);
 		datastore.upsertEntityUpdate(VACANCY_SUBMISSION_REJECTED, submissionId, { "vacancyId": id, "workerId": workerId })
 			.then(() => {});
 	} 
