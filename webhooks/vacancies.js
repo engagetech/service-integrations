@@ -62,7 +62,7 @@ function fetchVacancyAndCreateJobOrder(integrationConfig, bullhorn, id) {
 			const rate = primaryOrFirstRate(response.rates);
 			const salary = rate.payRate;
 			const salaryUnit = rate.rateType;
-			const employmentType = rate.payType;
+			const employmentType = response.vacancyType;
 			const numOpenings = response.numberOfVacancies;
 			const source = "Engage";
 

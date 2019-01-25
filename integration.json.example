@@ -59,31 +59,31 @@
 					"candidateToWorker": {
 						"M": {
 							"id": {
-								"S": "EmployeeId"
+								"S": "employeeId"
 							},
 							"firstName": {
-								"S": "FirstName"
+								"S": "firstName"
 							},
 							"lastName": {
-								"S": "Surname"
+								"S": "lastName"
 							},
 							"email": {
-								"S": "Email"
+								"S": "email"
 							},
 							"mobile": {
-								"S": "Mobile"
+								"S": "mobile"
 							},
 							"address.address1": {
-								"S": "Address1"
+								"S": "address1"
 							},
 							"address.address2": {
-								"S": "Address2"
+								"S": "address2"
 							},
 							"address.city": {
-								"S": "Address3"
+								"S": "address3"
 							},
 							"address.zip": {
-								"S": "AddressPostCode"
+								"S": "addressPostCode"
 							}
 						}
 					}

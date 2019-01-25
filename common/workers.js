@@ -9,13 +9,13 @@ var log = null;
 
 function convertAndCreateWorker(integrationConfig, candidate, callback) {
 	const workerPayload = mapper.candidateToWorker(integrationConfig.bullhorn, candidate);
-	log.info(`Converted candidate ${ candidate.id } to worker ${ workerPayload.EmployeeId }`);
+	log.info(`Converted candidate ${ candidate.id } to worker ${ workerPayload.employeeId }`);
 	const engage = new Engage(integrationConfig);
 	return engage.createWorker(workerPayload)
 		.then(([status, response]) => {
 			if (status === 200) {
-				log.info(`Engage worker ${ response.EmployeeId } created`);
-				const id = response.EmployeeId;
+				log.info(`Engage worker ${ response.employeeId } created`);
+				const id = response.employeeId;
 				const payload = {
 					action: "notification",
 					type: "registration",

@@ -45,8 +45,8 @@ function workerUpdated(integrationConfig, { id }) {
 	log.info("Handling worker update ", id);
 	new Engage(integrationConfig).getWorker(id).then(([status, worker]) => {
 		if (status === 200) {
-			log.info(`Fetched worker ${ worker.EmployeeId }`);
-			const id = worker.EmployeeId.replace(integrationConfig.bullhorn.workerPrefix, "");
+			log.info(`Fetched worker ${ worker.employeeId }`);
+			const id = worker.employeeId.replace(integrationConfig.bullhorn.workerPrefix, "");
 			updateCandidate(integrationConfig.bullhorn, worker, id);
 		} 
 		else

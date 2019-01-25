@@ -55,7 +55,7 @@ function isEngageJobOrder(exteranId) {
 
 function timestampToDate(timestamp) {
 	const d = new Date(timestamp);
-	return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+	return d.toISOString().split("T")[0]; // we only need the date
 }
 
 function addDays(timestamp, days) {
@@ -97,7 +97,7 @@ function submitWorkerToPlacement(integrationConfig, jobSubmission) {
 				// by convention we pick the first or the primary
 				const rate = primaryOrFirstRate(response.rates);
 				const payload = {
-					"personId": worker.Id,
+					"personId": worker.id,
 					"vacancyDetailId": vacancyId,
 					"finishDate": calculateAndFormatEndDate(jobSubmission.jobOrder),
 					"startDate": timestampToDate(jobSubmission.jobOrder.startDate),
